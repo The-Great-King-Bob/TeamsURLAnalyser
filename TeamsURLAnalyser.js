@@ -34,6 +34,7 @@ function getWhois() {
 				var whoisResult = whoisResult + datasplit + '   \n';
 				i++;
 			}
+			whoisResult = '**whois:**   \n' + whoisResult;
 			resolve(whoisResult);
 		})
 	})
@@ -57,6 +58,7 @@ function getVT(){
 				} catch (error) {
 					VTscan = 'VT Error: ' + error;
 				}
+				VTscan = '**Virus Total Results:**   \n' + VTscan;
 				resolve(VTscan);
 			})
 			.catch(function(err) {
@@ -97,7 +99,7 @@ function getxForce() {
 					xScore = JSON.stringify(obj.result.application.score, null, 2);
 				} catch (error) {
 				}
-				obj = 'URL: ' + xUrl + '   \n   \n Categories: ' + xCats + '   \n   \n Score: ' + xScore + '   \n   \n Description: ' + xDescription + '   \n   \n Risk Factors: ' + xRisk + '   \n   \n ';
+				obj = '**IBM xForce:**   \nURL: ' + xUrl + '   \n   \n Categories: ' + xCats + '   \n   \n Score: ' + xScore + '   \n   \n Description: ' + xDescription + '   \n   \n Risk Factors: ' + xRisk + '   \n   \n ';
 				resolve(obj);
 				})
 				.catch(function(err) {
@@ -135,6 +137,7 @@ function getQuad9(){
                                 } catch (error) {
                                         quad9Results = 'Quad9 Error: ' + error;
                                 }
+				quad9Results = '\n**Quad9:**   \n' + quad9Results
                                 resolve(quad9Results);
                         })
         })
@@ -148,7 +151,10 @@ function teamsMessagePush() {
 		'Content-Type': 'application/json'
 	};
 	try {
-		lookupData = '**whois:**' + '   \n' + arguments[0] + '**Virus Total Results:**' + '   \n' + arguments[1] + '**IBM xForce:**' + '   \n' + arguments[2] + '\n**Quad9:**' + '   \n' + arguments[3];
+		for (var i = 0; i < arguments.length; i++) {
+			lookupData += arguments[i];
+		}
+		console.log(lookupData)
 	} catch (error) {
 		lookupData = arguments[0];
 	}
@@ -196,8 +202,9 @@ http.createServer(function(request, response) {
 				url = receivedMsg.text.replace(/[^a-zA-Z0-9:*._ \/]/g, '');
 				//regex to filter URL to domain and sub domains
 				try {
-					match = url.match(/(?:(?:https?|ftp|file)^:\/\/|[-A-Z0-9]{1,60}\.)(?:\([-A-Z0-9+&@#%=~_|$?!:,.]*\)|[-A-Z0-9+&@#%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#%=~_|$?!:,.]*\)|[A-Z0-9+&@#%=~_|$])/im);
-					url = match[0]
+					url = url.match(/(?<=\/at).*/gm);
+					url = url.toString();
+					url = url.match(/(?:(?:https?|ftp|file)^:\/\/|[-A-Z0-9]{1,60}\.)(?:\([-A-Z0-9+&@#%=~_|$?!:,.]*\)|[-A-Z0-9+&@#%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#%=~_|$?!:,.]*\)|[A-Z0-9+&@#%=~_|$])/im);
 					url = url.toString();
 					//regex to filter out subdomains
 					url = url.match(/([^.*]{0,256}(?:\.[^.]{2,20})?$)/igm)
@@ -214,10 +221,20 @@ http.createServer(function(request, response) {
 					} else {
 						var responseMsg = '{ "type": "message", "text": "URL lookup: ' + url + '" }';
 						response.end(responseMsg);
-						var VT = await getVT();
-						var xForce = await getxForce();
+						VTkey = process.env.VT_API_KEY;
+						if (process.env.VT_API_KEY !== ""){
+							var VT = await getVT();
+						} else {
+							var VT = "";
+						}
+						if (process.env.XFORCE_USER_API_KEY !== ""){
+							var xForce = await getxForce();
+						} else { 
+							var xForce = "";
+						}
 						var quad9 = await getQuad9();
-						teamsMessagePush(lookup, VT, xForce, quad9);
+						results = lookup + VT + xForce + quad9;
+						teamsMessagePush(results);
 					}
 				} catch (error) {
 					console.log(error);
