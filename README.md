@@ -35,8 +35,9 @@ Create an outbound webhook within your Microsoft Teams application, with the URL
 
 Create a inbound webhook within your Microsoft Teams application. Completion of this will give you a URL. This should be inputted into your .env file as "TEAMS\_WEBHOOK\_URL"
 
-Your Virus Total API key should be inputted into your .env file as "VT\_API\_KEY"
-Your IBM X-Force API keys should be inputted into your .env file as "XFORCE\_USER\_API\_KEY" and "XFORCE\_PASSWORD\_API\_KEY"
+If you wish to use Virus Total, your Virus Total API key should be inputted into your .env file as "VT\_API\_KEY"
+If you wish to use IBM X-Force, your IBM X-Force API keys should be inputted into your .env file as "XFORCE\_USER\_API\_KEY" and "XFORCE\_PASSWORD\_API\_KEY"
+*If API keys are not inputted, then those API lookups will be ignored*
 
 Currently, this software uses ngrok (https://ngrok.com/) to provide a HTTPS secure tunnel for the interaction between Teams and Teams URL Analyser.
 *If using a webserver setup to use HTTPS/TLS then ngrok is not needed. Script may need editing to run HTTPS.*
