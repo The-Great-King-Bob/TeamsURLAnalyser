@@ -154,7 +154,6 @@ function teamsMessagePush() {
 		for (var i = 0; i < arguments.length; i++) {
 			lookupData += arguments[i];
 		}
-		console.log(lookupData)
 	} catch (error) {
 		lookupData = arguments[0];
 	}
@@ -174,6 +173,7 @@ function teamsMessagePush() {
 		}
 	}
 	request(options, callback);
+	lookupData = ""
 }
 
 http.createServer(function(request, response) {
@@ -202,7 +202,7 @@ http.createServer(function(request, response) {
 				url = receivedMsg.text.replace(/[^a-zA-Z0-9:*._ \/]/g, '');
 				//regex to filter URL to domain and sub domains
 				try {
-					url = url.match(/(?<=\/at).*/gm);
+					url = url.match(/(?<=\/at).*/m);
 					url = url.toString();
 					url = url.match(/(?:(?:https?|ftp|file)^:\/\/|[-A-Z0-9]{1,60}\.)(?:\([-A-Z0-9+&@#%=~_|$?!:,.]*\)|[-A-Z0-9+&@#%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#%=~_|$?!:,.]*\)|[A-Z0-9+&@#%=~_|$])/im);
 					url = url.toString();
@@ -211,6 +211,7 @@ http.createServer(function(request, response) {
 					url = url.toString();
 					url = url.replace('nbsp', '')
 					url = url.replace(',', '')
+					console.log(url);
 					//calls API functions as an await (waits for function to resolve before continuing)
 					var lookup = await getWhois();
 					//checks if whois reply is valid
@@ -234,6 +235,7 @@ http.createServer(function(request, response) {
 						}
 						var quad9 = await getQuad9();
 						results = lookup + VT + xForce + quad9;
+						console.log(results);
 						teamsMessagePush(results);
 					}
 				} catch (error) {
