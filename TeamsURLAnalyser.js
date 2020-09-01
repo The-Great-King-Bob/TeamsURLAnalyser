@@ -9,6 +9,7 @@
 
 // -----------------------------------
 
+// requirements
 require('dotenv').config();
 const request = require('request-promise');
 const crypto = require('crypto');
@@ -40,6 +41,7 @@ function getWhois() {
 	})
 }
 
+// Function to search Virus Total for URL report and parse JSON response
 function getVT(){
 	return new Promise((resolve, reject) =>{
 		var options = {
@@ -68,7 +70,7 @@ function getVT(){
 	})
 }
 
-//Function to collect IBM xForce data from the API.
+//Function to collect IBM xForce data from API and parse JSON response
 function getxForce() {
 	return new Promise((resolve, reject) => {
 		var options = {
@@ -110,6 +112,7 @@ function getxForce() {
 	})
 }
 
+// function to check URL against quad9 blocklist
 function getQuad9(){
         return new Promise((resolve, reject) =>{
 		var options = {
@@ -176,6 +179,7 @@ function teamsMessagePush() {
 	lookupData = ""
 }
 
+// Creates http server listening on given port
 http.createServer(function(request, response) {
 	var payload = '';
 	// Process the request
@@ -211,23 +215,25 @@ http.createServer(function(request, response) {
 					url = url.toString();
 					url = url.replace('nbsp', '')
 					url = url.replace(',', '')
-					console.log(url);
-					//calls API functions as an await (waits for function to resolve before continuing)
+					// does whois lookup to check if domain is valid
 					var lookup = await getWhois();
-					//checks if whois reply is valid
-					//creates team reply with whois info
+					// respond to Teams with either error message or confirmation of domain
 					if (lookup.match(/No match for domain/i) || lookup.match(/StatusCodeError: 404/i)) {
 						var responseMsg = '{ "type": "message", "text": "No whois match found for domain" }';
 						response.end(responseMsg);
 					} else {
 						var responseMsg = '{ "type": "message", "text": "URL lookup: ' + url + '" }';
 						response.end(responseMsg);
+						// check for Virus Total API key
+						// call getVT if key exists
 						VTkey = process.env.VT_API_KEY;
 						if (process.env.VT_API_KEY !== ""){
 							var VT = await getVT();
 						} else {
 							var VT = "";
 						}
+                                                // check for IBM xForce API key
+                                                // call getxForce if key exists
 						if (process.env.XFORCE_USER_API_KEY !== ""){
 							var xForce = await getxForce();
 						} else { 
@@ -235,7 +241,6 @@ http.createServer(function(request, response) {
 						}
 						var quad9 = await getQuad9();
 						results = lookup + VT + xForce + quad9;
-						console.log(results);
 						teamsMessagePush(results);
 					}
 				} catch (error) {
@@ -259,7 +264,7 @@ console.log('Listening on port %s', PORT);
 
 //error catcher for all unhandled promise rejects
 //should never run, is only here for future proofing code
-//Unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code
+//unhandled promise rejections are deprecated. In the future, promise rejections that are not handled will terminate the Node.js process with a non-zero exit code
 process.on('unhandledRejection', function(err) {
 	console.log(err);
 });
